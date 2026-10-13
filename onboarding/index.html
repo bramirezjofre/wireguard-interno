@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>WireGuard Interno · Portal de Onboarding</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: linear-gradient(135deg, #1a0033 0%, #2d1b4e 100%);
+      color: #fff;
+      min-height: 100vh;
+      padding: 2rem 1rem;
+      line-height: 1.6;
+    }
+    .container { max-width: 720px; margin: 0 auto; }
+    h1 {
+      font-size: 2rem; margin-bottom: 0.5rem;
+      background: linear-gradient(90deg, #ffbe0b, #ff006e);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .subtitle { color: #b0a8c0; margin-bottom: 2rem; }
+    .info {
+      background: rgba(255,190,11,0.1);
+      border-left: 4px solid #ffbe0b;
+      padding: 1rem;
+      border-radius: 4px;
+      margin-bottom: 1.5rem;
+      font-size: 0.95rem;
+    }
+    .info strong { color: #ffbe0b; }
+    .step {
+      background: rgba(255,255,255,0.05);
+      border-left: 4px solid #00f5ff;
+      border-radius: 8px;
+      padding: 1.25rem 1.5rem;
+      margin-bottom: 1rem;
+    }
+    .step h2 {
+      font-size: 1.1rem; color: #00f5ff;
+      margin-bottom: 0.5rem;
+    }
+    .step p, .step li { color: #d0c8e0; }
+    .step ol, .step ul { margin-left: 1.5rem; }
+    .peers-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 0.75rem;
+      margin: 1rem 0;
+    }
+    .peer {
+      background: rgba(0,0,0,0.3);
+      border: 1px solid rgba(0, 245, 255, 0.3);
+      border-radius: 8px;
+      padding: 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: all 0.15s;
+    }
+    .peer:hover {
+      border-color: #00f5ff;
+      background: rgba(0,0,0,0.5);
+    }
+    .peer-name {
+      font-weight: 600;
+      color: #00f5ff;
+    }
+    .peer-ip {
+      font-size: 0.85em;
+      color: #b0a8c0;
+      font-family: "SF Mono", Consolas, monospace;
+    }
+    .peer a {
+      color: #ffbe0b;
+      text-decoration: none;
+      font-size: 0.9em;
+    }
+    .peer a:hover { text-decoration: underline; }
+    code {
+      background: rgba(0,0,0,0.3);
+      padding: 0.15rem 0.4rem;
+      border-radius: 4px;
+      font-family: "SF Mono", Consolas, monospace;
+      font-size: 0.9em;
+      color: #ffbe0b;
+    }
+    .footer {
+      margin-top: 2rem;
+      text-align: center;
+      color: #6c5b7b;
+      font-size: 0.85em;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>WireGuard Interno</h1>
+    <p class="subtitle">VPN de la LAN — descarga tu config y conectate</p>
+
+    <div class="info">
+      <strong>Importante:</strong> esta VPN es solo para uso interno.
+      Los archivos <code>.conf</code> contienen claves privadas, no los
+      compartas por medios inseguros.
+    </div>
+
+    <div class="step">
+      <h2>Paso 1 · Descargá tu peer</h2>
+      <p>Cada device necesita su propio archivo. Elegí el que querés usar:</p>
+      <div class="peers-grid" id="peers-grid">
+        <div class="peer">
+          <div>
+            <div class="peer-name">peer1</div>
+            <div class="peer-ip">10.14.14.2</div>
+          </div>
+          <a href="/peers/peer1.conf">⬇ descargar</a>
+        </div>
+        <div class="peer">
+          <div>
+            <div class="peer-name">peer2</div>
+            <div class="peer-ip">10.14.14.3</div>
+          </div>
+          <a href="/peers/peer2.conf">⬇ descargar</a>
+        </div>
+        <div class="peer">
+          <div>
+            <div class="peer-name">peer3</div>
+            <div class="peer-ip">10.14.14.4</div>
+          </div>
+          <a href="/peers/peer3.conf">⬇ descargar</a>
+        </div>
+        <div class="peer">
+          <div>
+            <div class="peer-name">peer4</div>
+            <div class="peer-ip">10.14.14.5</div>
+          </div>
+          <a href="/peers/peer4.conf">⬇ descargar</a>
+        </div>
+        <div class="peer">
+          <div>
+            <div class="peer-name">peer5</div>
+            <div class="peer-ip">10.14.14.6</div>
+          </div>
+          <a href="/peers/peer5.conf">⬇ descargar</a>
+        </div>
+      </div>
+      <p style="margin-top: 0.75rem; font-size: 0.9em; color: #b0a8c0;">
+        Si necesitás otro peer (ej. <code>tv-living</code>), avisale al admin
+        para que lo agregue.
+      </p>
+    </div>
+
+    <div class="step">
+      <h2>Paso 2 · Importar en WireGuard</h2>
+      <p>Dependiendo del device:</p>
+      <ul>
+        <li><strong>Android / Android TV:</strong> abrí el archivo descargado
+          con la app de WireGuard → "Importar desde archivo"</li>
+        <li><strong>iOS / macOS:</strong> abrí el archivo con la app de
+          WireGuard → "Importar desde archivo o QR"</li>
+        <li><strong>Linux:</strong> copialo a
+          <code>/etc/wireguard/wg-interno.conf</code> y corré
+          <code>wg-quick up wg-interno</code></li>
+        <li><strong>Windows:</strong> click derecho en el archivo →
+          "Import with WireGuard"</li>
+      </ul>
+    </div>
+
+    <div class="step">
+      <h2>Paso 3 · Activar</h2>
+      <p>En la app de WireGuard, activá el switch del túnel importado.
+        El status debería pasar a "Activo".</p>
+      <p>Para confirmar que estás en la VPN, abrí
+        <a href="http://192.168.1.3:8080/admin/" style="color:#00f5ff">
+          el admin del Pi-hole</a> — debería cargar.</p>
+    </div>
+
+    <div class="footer">
+      VPN: 10.14.14.0/24 · DNS: 192.168.1.3 (Pi-hole) · Server: 192.168.1.4:51820
+    </div>
+  </div>
+</body>
+</html>

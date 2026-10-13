@@ -1,0 +1,69 @@
+name: wireguard-interno
+
+services:
+  # === Bootstrap: genera keys y configs al primer arranque ===
+  bootstrap:
+    image: alpine:3.19
+    container_name: wg-bootstrap
+    volumes:
+      - wg-config:/config
+      - wg-peers:/peers
+      - ./bootstrap.sh:/bootstrap.sh:ro
+    environment:
+      - SERVER_IP=${SERVER_IP:-192.168.1.4}
+      - WG_PORT=${WG_PORT:-51820}
+      - WG_NETWORK=${WG_NETWORK:-10.14.14.0/24}
+      - WG_SERVER_IP=${WG_SERVER_IP:-10.14.14.1}
+      - PIHOLE_DNS=${PIHOLE_DNS:-192.168.1.3}
+      - PEER_COUNT=${PEER_COUNT:-5}
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - "apk add --no-cache wireguard-tools bash && /bootstrap.sh"
+    restart: "no"
+
+  # === WireGuard server ===
+  wireguard:
+    image: linuxserver/wireguard:latest
+    container_name: wireguard
+    depends_on:
+      bootstrap:
+        condition: service_completed_successfully
+    restart: unless-stopped
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Chile/Continental
+      - SERVERURL=${SERVER_IP:-192.168.1.4}
+      - SERVERPORT=${WG_PORT:-51820}
+      - PEERS=0  # los generamos via bootstrap, no auto
+      - PEERDNS=${PIHOLE_DNS:-192.168.1.3}
+      - INTERNAL_SUBNET=10.14.14.0
+    volumes:
+      - wg-config:/config
+      - wg-peers:/peers
+      - /lib/modules:/lib/modules:ro
+    ports:
+      - "${WG_PORT:-51820}:51820/udp"
+    sysctls:
+      - net.ipv4.conf.all.src_valid_mark=1
+
+  # === Portal web Caddy para distribuir los .conf ===
+  caddy:
+    image: caddy:2-alpine
+    container_name: wg-onboarding
+    restart: unless-stopped
+    ports:
+      - "${ONBOARDING_PORT:-8081}:8080"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./onboarding:/srv/onboarding:ro
+      - wg-peers:/peers:ro
+
+volumes:
+  wg-config:
+    driver: local
+  wg-peers:
+    driver: local

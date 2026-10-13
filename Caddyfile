@@ -1,0 +1,36 @@
+:8080 {
+    encode gzip
+
+    # Página principal con listado de peers
+    @html path / /index.html
+    handle @html {
+        root * /srv/onboarding
+        header Content-Type text/html
+        rewrite * /index.html
+        file_server
+    }
+
+    # Descarga de los .conf (un endpoint por peer)
+    @peer path /peers/*
+    handle @peer {
+        root * /peers
+        header Content-Type text/plain
+        header Content-Disposition "attachment; filename={path.basename}"
+        file_server
+    }
+
+    # Healthcheck
+    handle /health {
+        respond "OK" 200
+    }
+
+    # Fallback estático
+    handle /* {
+        root * /srv/onboarding
+        file_server
+    }
+
+    log {
+        level INFO
+    }
+}

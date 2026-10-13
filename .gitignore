@@ -1,0 +1,26 @@
+# Secrets - NUNCA commitear
+.env
+*.key
+*.pem
+peers/
+config/
+wg-keys/
+
+# Volúmenes de Docker
+wg-config/
+wg-peers/
+
+# Certs y keys generadas
+*.privkey
+*.pubkey
+psk*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+logs/
