@@ -48,10 +48,10 @@ docker compose ps
 |---|---|---|
 | `SERVER_IP` | 192.168.1.4 | IP del server en la LAN |
 | `WG_PORT` | 51820 | Puerto UDP de WireGuard |
-| `WG_NETWORK` | 10.14.14.0/24 | Subred de la VPN |
+| `WG_NETWORK` | 10.14.14.0/24 | Subred de la VPN (lo que ven los peers) |
 | `WG_SERVER_IP` | 10.14.14.1 | IP del server en la VPN |
+| `PIHOLE_VPN_IP` | 10.14.15.2 | IP del pihole-vpn en la red Docker interna |
 | `PEER_COUNT` | 5 | Cantidad de peers a generar |
-| `PIHOLE_DNS` | 192.168.1.3 | DNS Pi-hole que se push a los peers |
 | `ONBOARDING_PORT` | 8081 | Puerto del portal web |
 
 ## Arquitectura
@@ -59,18 +59,27 @@ docker compose ps
 ```
 [TV / celular]
     │
-    │ descarga http://192.168.1.4:8081/peers/tv-living.conf
+    │ descarga http://192.168.1.4:8081/peers/peer1.conf
+    │ + importa en WireGuard app
     │
     ▼
 [Caddy :8081] ──── sir ve archivos .conf
     │
     ▼
-[WireGuard :51820 UDP] ──── server VPN
+[WireGuard :51820 UDP] ──── server VPN (red 10.14.14.0/24)
     │
-    │ push DNS = 192.168.1.3 (Pi-hole)
+    │ push DNS = 10.14.15.2 (pihole-vpn)
     ▼
-[LAN: 192.168.1.0/24]
+[Pihole VPN] ──── filtra y filtra (red Docker 10.14.15.0/24)
+    │
+    │ upstream
+    ▼
+[Pihole RPi 192.168.1.3] + [Pihole server-18 192.168.1.25]
 ```
+
+Replica el patrón de `server-19`: wireguard + pihole en una red Docker
+interna dedicada. El pihole-vpn actúa como el resolver DNS de los peers,
+y delega al pihole de la RPi (que es el filtro principal de la LAN).
 
 ## Limitaciones
 

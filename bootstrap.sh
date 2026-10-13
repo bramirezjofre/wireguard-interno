@@ -10,7 +10,7 @@ SERVER_IP="${SERVER_IP:-192.168.1.4}"
 WG_PORT="${WG_PORT:-51820}"
 WG_NETWORK="${WG_NETWORK:-10.14.14.0/24}"
 WG_SERVER_IP="${WG_SERVER_IP:-10.14.14.1}"
-PIHOLE_DNS="${PIHOLE_DNS:-192.168.1.3}"
+PIHOLE_VPN_IP="${PIHOLE_VPN_IP:-10.14.15.2}"
 PEER_COUNT="${PEER_COUNT:-5}"
 
 # Si ya hay wg0.conf, no hacer nada
@@ -54,7 +54,7 @@ AllowedIPs = ${PEER_IP}/32
 [Interface]
 PrivateKey = ${PEER_PRIV}
 Address = ${PEER_IP}/32
-DNS = ${PIHOLE_DNS}
+DNS = ${PIHOLE_VPN_IP}
 
 [Peer]
 PublicKey = ${SERVER_PUB}
