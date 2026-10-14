@@ -30,17 +30,14 @@ SERVER_PUB=$(echo "$SERVER_PRIV" | wg pubkey)
 echo "=== Generando $PEER_COUNT peers ==="
 PEER_ENTRIES=""
 for i in $(seq 1 "$PEER_COUNT"); do
-  PEER_NAME="peer${i}"
-  PEER_PRIV=$(wg genkey)
-  PEER_PUB=$(echo "$PEER_PRIV" | wg pubkey)
-  PEER_PSK=$(wg genpsk)
-  PEER_IP="10.14.14.$((i + 1))"
+PEER_NAME="peer${i}"
+PEER_PRIV=$(wg genkey)
+PEER_PUB=$(echo "$PEER_PRIV" | wg pubkey)
+PEER_PSK=$(wg genpsk)
+PEER_IP="10.14.14.$((i + 1))"
 
-  # Calcular AllowedIPs: red VPN + LAN (para que puedan ver la LAN)
-  ALLOWED_IPS="10.14.14.0/24, 192.168.1.0/24"
-
-  # Entrada para wg0.conf
-  PEER_ENTRIES="${PEER_ENTRIES}
+# Entrada para wg0.conf (server): solo la IP del peer
+PEER_ENTRIES="${PEER_ENTRIES}
 [Peer]
 # ${PEER_NAME}
 PublicKey = ${PEER_PUB}
@@ -49,8 +46,14 @@ AllowedIPs = ${PEER_IP}/32
 
 "
 
-  # Archivo .conf para el cliente
-  cat > "$PEERS_DIR/${PEER_NAME}.conf" <<EOF
+# Archivo .conf para el cliente:
+# AllowedIPs = 0.0.0.0/0 → todo el trafico del device pasa por la VPN
+# (incluye internet). Esto es lo mismo que server-19 hace con su peer
+# externo.
+ALLOWED_IPS="0.0.0.0/0"
+
+# Archivo .conf para el cliente
+cat > "$PEERS_DIR/${PEER_NAME}.conf" <<EOF
 [Interface]
 PrivateKey = ${PEER_PRIV}
 Address = ${PEER_IP}/32
@@ -64,8 +67,8 @@ AllowedIPs = ${ALLOWED_IPS}
 PersistentKeepalive = 25
 EOF
 
-  chmod 600 "$PEERS_DIR/${PEER_NAME}.conf"
-  echo "  Generado $PEER_NAME ($PEER_IP)"
+chmod 600 "$PEERS_DIR/${PEER_NAME}.conf"
+echo "  Generado $PEER_NAME ($PEER_IP)"
 done
 
 # wg0.conf del server

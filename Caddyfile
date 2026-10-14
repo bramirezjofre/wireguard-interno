@@ -1,27 +1,54 @@
 :8080 {
     encode gzip
 
-    # Página principal con listado de peers
-    @html path / /index.html
-    handle @html {
+    # Healthcheck
+    handle /health {
+        respond "OK" 200
+    }
+
+    # Página principal
+    handle / {
         root * /srv/onboarding
-        header Content-Type text/html
         rewrite * /index.html
         file_server
     }
 
-    # Descarga de los .conf (un endpoint por peer)
-    @peer path /peers/*
-    handle @peer {
+    # Descarga de los .conf (uno por peer)
+    # Manejamos cada peer explícitamente
+    handle /peers/peer1.conf {
         root * /peers
+        rewrite * /peer1.conf
         header Content-Type text/plain
-        header Content-Disposition "attachment; filename={path.basename}"
+        header Content-Disposition "attachment; filename=peer1.conf"
         file_server
     }
-
-    # Healthcheck
-    handle /health {
-        respond "OK" 200
+    handle /peers/peer2.conf {
+        root * /peers
+        rewrite * /peer2.conf
+        header Content-Type text/plain
+        header Content-Disposition "attachment; filename=peer2.conf"
+        file_server
+    }
+    handle /peers/peer3.conf {
+        root * /peers
+        rewrite * /peer3.conf
+        header Content-Type text/plain
+        header Content-Disposition "attachment; filename=peer3.conf"
+        file_server
+    }
+    handle /peers/peer4.conf {
+        root * /peers
+        rewrite * /peer4.conf
+        header Content-Type text/plain
+        header Content-Disposition "attachment; filename=peer4.conf"
+        file_server
+    }
+    handle /peers/peer5.conf {
+        root * /peers
+        rewrite * /peer5.conf
+        header Content-Type text/plain
+        header Content-Disposition "attachment; filename=peer5.conf"
+        file_server
     }
 
     # Fallback estático

@@ -1,86 +1,60 @@
 name: wireguard-interno
 
 services:
-  # === Bootstrap: genera keys y configs al primer arranque ===
-  bootstrap:
-    image: alpine:3.19
-    container_name: wg-bootstrap
-    volumes:
-      - wg-config:/config
-      - wg-peers:/peers
-      - ./bootstrap.sh:/bootstrap.sh:ro
-    environment:
-      - SERVER_IP=${SERVER_IP:-192.168.1.4}
-      - WG_PORT=${WG_PORT:-51820}
-      - WG_NETWORK=${WG_NETWORK:-10.14.14.0/24}
-      - WG_SERVER_IP=${WG_SERVER_IP:-10.14.14.1}
-      - PIHOLE_VPN_IP=${PIHOLE_VPN_IP:-10.14.15.2}
-      - PEER_COUNT=${PEER_COUNT:-5}
-    entrypoint: ["/bin/sh", "-c"]
-    command:
-      - "apk add --no-cache wireguard-tools bash && /bootstrap.sh"
-    restart: "no"
-
-  # === Pihole dedicado para esta VPN ===
-  # Replica el patron de server-19: pihole en red Docker, escucha solo
-  # para los peers de la VPN. Usa como upstream el pihole de la RPi
-  # y el de server-18, igual que el resto de la LAN.
-  pihole-vpn:
-    container_name: pihole-vpn
-    image: pihole/pihole:latest
-    restart: unless-stopped
-    networks:
-      vpn-internal:
-        ipv4_address: ${PIHOLE_VPN_IP:-10.14.15.2}
-    environment:
-      TZ: 'Chile/Continental'
-      # WEBPASSWORD: 'Pa$$w0rd'  # descomentar si queres acceso web
-      # Forzar DNS a escuchar en TODAS las interfaces para que la VPN
-      # pueda usarlo (no solo localhost)
-      FTLCONF_dns_listeningMode: "ALL"
-    volumes:
-      - pihole-vpn-config:/etc/pihole
-      - pihole-vpn-dnsmasq:/etc/dnsmasq.d
-    dns:
-      - 192.168.1.3   # upstream: pihole RPi
-      - 192.168.1.25  # upstream: pihole server-18
-    cap_add:
-      - NET_ADMIN
-
-  # === WireGuard server ===
   wireguard:
-    image: linuxserver/wireguard:latest
+    image: linuxserver/wireguard
     container_name: wireguard
-    depends_on:
-      bootstrap:
-        condition: service_completed_successfully
-      pihole-vpn:
-        condition: service_started
-    restart: unless-stopped
     cap_add:
       - NET_ADMIN
       - SYS_MODULE
-    networks:
-      vpn-internal:
-        ipv4_address: 10.14.15.3
     environment:
       - PUID=1000
       - PGID=1000
       - TZ=Chile/Continental
-      - SERVERURL=${SERVER_IP:-192.168.1.4}
-      - SERVERPORT=${WG_PORT:-51820}
-      - PEERS=0  # los generamos via bootstrap, no auto
-      # DNS push a los peers: el pihole-vpn de esta red
-      - PEERDNS=${PIHOLE_VPN_IP:-10.14.15.2}
+      - SERVERPORT=51820 #optional
+      - PEERS=5 #optional
+      - PEERDNS=172.20.0.7 #optional
       - INTERNAL_SUBNET=10.14.14.0
+      - SERVERURL=192.168.1.4 #optional
     volumes:
-      - wg-config:/config
+      - ./wireguard:/config
+      - /lib/modules:/lib/modules
+      - /usr/src:/usr/src
       - wg-peers:/peers
-      - /lib/modules:/lib/modules:ro
     ports:
-      - "${WG_PORT:-51820}:51820/udp"
+      - 51820:51820/udp
     sysctls:
       - net.ipv4.conf.all.src_valid_mark=1
+    dns:
+      - 172.20.0.7
+    restart: unless-stopped
+    networks:
+      containers:
+        ipv4_address: 172.20.0.6
+
+  pihole:
+    container_name: pihole
+    image: pihole/pihole
+    ports:
+      - 8082:80
+    expose:
+      - "53"
+      - "67"
+      - "80"
+      - "443"
+    environment:
+      TZ: 'Chile/Continental'
+      WEBPASSWORD: '1507Bramirezj'
+    volumes:
+      - './etc-pihole/:/etc/pihole/'
+      - './etc-dnsmasq.d/:/etc/dnsmasq.d/'
+    cap_add:
+      - NET_ADMIN
+    restart: unless-stopped
+    networks:
+      containers:
+        ipv4_address: 172.20.0.7
+
 
   # === Portal web Caddy ===
   caddy:
@@ -95,18 +69,11 @@ services:
       - wg-peers:/peers:ro
 
 networks:
-  vpn-internal:
-    driver: bridge
+  containers:
     ipam:
       config:
-        - subnet: 10.14.15.0/24
+        - subnet: 172.20.0.0/24
 
 volumes:
-  wg-config:
-    driver: local
   wg-peers:
-    driver: local
-  pihole-vpn-config:
-    driver: local
-  pihole-vpn-dnsmasq:
     driver: local

@@ -9,6 +9,9 @@ wg-keys/
 # Volúmenes de Docker
 wg-config/
 wg-peers/
+wireguard/
+etc-pihole/
+etc-dnsmasq.d/
 
 # Certs y keys generadas
 *.privkey
